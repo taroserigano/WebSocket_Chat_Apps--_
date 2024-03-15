@@ -19,6 +19,8 @@ export default function Messenger() {
   const { user } = useContext(AuthContext);
   const scrollRef = useRef();
 
+  // 1. initially, establish connection
+  // 2. receive any incoming messages and set it as arrival message  
   useEffect(() => {
     socket.current = io("ws://localhost:8900");
     socket.current.on("getMessage", (data) => {
@@ -30,12 +32,15 @@ export default function Messenger() {
     });
   }, []);
 
+  // if any arrival message exist OR chat messages change, 
+  // add that to existing messages 
   useEffect(() => {
     arrivalMessage &&
       currentChat?.members.includes(arrivalMessage.sender) &&
       setMessages((prev) => [...prev, arrivalMessage]);
   }, [arrivalMessage, currentChat]);
 
+  // if any User condition changes, 
   useEffect(() => {
     socket.current.emit("addUser", user._id);
     socket.current.on("getUsers", (users) => {
@@ -43,8 +48,9 @@ export default function Messenger() {
         user.followings.filter((f) => users.some((u) => u.userId === f))
       );
     });
-  }, [user]);
+  }, [user]); 
 
+  //  if user changed, refetch all the convo messages  
   useEffect(() => {
     const getConversations = async () => {
       try {
@@ -57,6 +63,7 @@ export default function Messenger() {
     getConversations();
   }, [user._id]);
 
+  
   useEffect(() => {
     const getMessages = async () => {
       try {
